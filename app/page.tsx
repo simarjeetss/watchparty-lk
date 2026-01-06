@@ -164,7 +164,7 @@ export default function Page() {
     <>
       <main className={styles.main} data-lk-theme="default">
         <div className="header">
-          <h1 style={{ fontSize: '3rem', margin: 0 }}>HUIHUIHUIHUIHUI</h1>
+          <h1 style={{ fontSize: '3rem', margin: 0 }}>Ok</h1>
         </div>
         <Suspense fallback="Loading">
           <Tabs>
