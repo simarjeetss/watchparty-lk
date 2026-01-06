@@ -240,7 +240,7 @@ function WatchPartyConference(props: {
       <RoomContext.Provider value={room}>
         <KeyboardShortcuts />
         {/* WatchParty uses the cinema-style layout */}
-        <WatchPartyLayout showChat={true} />
+        <WatchPartyLayout />
         <DebugMode />
         <RecordingIndicator />
       </RoomContext.Provider>
