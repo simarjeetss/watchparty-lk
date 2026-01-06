@@ -233,7 +233,7 @@ function WatchPartyLayoutInner() {
             {/* Waiting state message */}
             {participantCount <= 1 && (
               <div className={styles.waitingState}>
-                <div className={styles.waitingIcon}>🎬</div>
+                {/* <div className={styles.waitingIcon}>🎬</div> */}
                 <div className={styles.waitingText}>
                   Ready to start the WatchParty!
                 </div>

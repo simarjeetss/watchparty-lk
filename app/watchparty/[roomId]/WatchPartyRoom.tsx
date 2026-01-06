@@ -76,7 +76,7 @@ export function WatchPartyRoom(props: {
       {connectionDetails === undefined || preJoinChoices === undefined ? (
         <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
           <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>🎬 WatchParty</h1>
+            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>WatchParty</h1>
             <p style={{ color: 'rgba(255,255,255,0.7)' }}>Join the room to watch together</p>
           </div>
           <PreJoin
