@@ -9,7 +9,7 @@ import {
   useIsRecording,
 } from '@livekit/components-react';
 import styles from '../styles/SettingsMenu.module.css';
-import { CameraSettings } from './CameraSettings';
+// import { CameraSettings } from './CameraSettings';
 import { MicrophoneSettings } from './MicrophoneSettings';
 /**
  * @alpha
@@ -99,9 +99,9 @@ export function SettingsMenu(props: SettingsMenuProps) {
             {settings.media && settings.media.camera && (
               <>
                 <h3>Camera</h3>
-                <section>
+                {/* <section>
                   <CameraSettings />
-                </section>
+                </section> */}
               </>
             )}
             {settings.media && settings.media.microphone && (

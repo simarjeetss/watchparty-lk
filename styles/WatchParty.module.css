@@ -11,9 +11,17 @@
 
 /* Cinema mode: Screen share takes most of the screen */
 .cinemaMode {
-  display: grid;
-  grid-template-rows: 1fr auto;
+  display: flex;
+  flex-direction: column;
   height: 100%;
+}
+
+/* Content area: main content + optional chat panel */
+.contentArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 }
 
 /* Main screen share area - takes up most of the viewport */
@@ -210,6 +218,14 @@
   height: 100%;
 }
 
+/* Content area wrapper for gallery mode too */
+.galleryMode .contentArea {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
 .galleryGrid {
   flex: 1;
   display: grid;
@@ -266,16 +282,14 @@
 
 /* Chat Panel Styles */
 .chatPanel {
-  position: absolute;
-  right: 0;
-  top: 0;
-  bottom: 72px; /* Leave room for control bar */
   width: 320px;
+  height: 100%;
   background-color: #1a1a1a;
   border-left: 1px solid rgba(255, 255, 255, 0.1);
   display: flex;
   flex-direction: column;
-  z-index: 20;
+  flex-shrink: 0;
+  overflow: hidden;
 }
 
 .chatHeader {
@@ -286,6 +300,23 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.1);
   font-weight: 500;
   color: white;
+  flex-shrink: 0;
+}
+
+.chatBody {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.chatBody :global(.lk-chat) {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  height: 100%;
 }
 
 .chatClose {
@@ -304,21 +335,17 @@
   color: white;
 }
 
-.chatPanel :global(.lk-chat) {
-  flex: 1;
-  min-height: 0;
-  background-color: transparent;
-}
-
 .chatPanel :global(.lk-chat-messages) {
   flex: 1;
   overflow-y: auto;
   padding: 12px;
+  min-height: 0;
 }
 
 .chatPanel :global(.lk-chat-form) {
   padding: 12px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
 }
 
 .chatPanel :global(.lk-chat-form-input) {
@@ -362,15 +389,21 @@
 
 /* Responsive adjustments for chat */
 @media (max-width: 768px) {
+  .contentArea {
+    flex-direction: column;
+  }
+  
   .chatPanel {
     width: 100%;
-    left: 0;
-    right: 0;
-    bottom: 72px;
-    top: auto;
-    height: 50%;
+    height: 40%;
+    flex-shrink: 0;
     border-left: none;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
+  }
+  
+  .mainContent {
+    flex: 1;
+    min-height: 0;
   }
   
   .chatToggle {
