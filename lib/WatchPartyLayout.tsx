@@ -14,19 +14,14 @@ import {
   useLocalParticipant,
   LayoutContextProvider,
   useCreateLayoutContext,
-  useMaybeLayoutContext,
-  Chat,
+  useChat,
+  ChatEntry,
   formatChatMessageLinks,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import { useScreenShare } from './useScreenShare';
 import { ConnectionQuality } from './ConnectionQuality';
 import styles from '../styles/WatchParty.module.css';
-
-export interface WatchPartyLayoutProps {
-  /** Show chat panel */
-  showChat?: boolean;
-}
 
 /**
  * WatchParty Layout Component
@@ -36,18 +31,18 @@ export interface WatchPartyLayoutProps {
  *   with participant videos as small floating thumbnails
  * - When no screen share: Standard grid layout for participants
  */
-export function WatchPartyLayout({ showChat = true }: WatchPartyLayoutProps) {
+export function WatchPartyLayout() {
   // Create layout context for ControlBar
   const layoutContext = useCreateLayoutContext();
 
   return (
     <LayoutContextProvider value={layoutContext}>
-      <WatchPartyLayoutInner showChat={showChat} />
+      <WatchPartyLayoutInner />
     </LayoutContextProvider>
   );
 }
 
-function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
+function WatchPartyLayoutInner() {
   const {
     isScreenShareActive,
     screenShareParticipant,
@@ -56,10 +51,25 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
   } = useScreenShare();
 
   const [thumbnailsCollapsed, setThumbnailsCollapsed] = useState(false);
-  
-  // Use layout context to get chat visibility (controlled by ControlBar's chat button)
-  const layoutContext = useMaybeLayoutContext();
-  const isChatOpen = showChat && (layoutContext?.widget?.state?.showChat ?? false);
+  const [chatVisible, setChatVisible] = useState(true);
+
+  // Chat functionality using useChat hook
+  const { chatMessages, send, isSending } = useChat();
+  const [chatInput, setChatInput] = useState('');
+
+  const handleSendMessage = () => {
+    if (chatInput.trim() && !isSending) {
+      send(chatInput.trim());
+      setChatInput('');
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  };
 
   // Get all tracks for rendering
   const screenShareTrackRefs = useTracks([Track.Source.ScreenShare]);
@@ -81,20 +91,14 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
           <div className={styles.contentArea}>
             <div className={styles.mainContent}>
               {/* Screen share indicator */}
-              <div className={styles.screenShareIndicator}>
+              {/* <div className={styles.screenShareIndicator}>
                 {screenShareParticipant?.name || screenShareParticipant?.identity} is sharing
-              </div>
+              </div> */}
 
-              {/* Audio indicator */}
-              {hasScreenShareAudio && (
-                <div className={styles.audioIndicator}>
-                  🔊 Audio shared
-                </div>
-              )}
 
               {/* Participant count and connection quality */}
               <div className={styles.participantCount}>
-                👥 {participantCount} watching
+                    {participantCount} watching
                 <span style={{ marginLeft: '12px' }}>
                   <ConnectionQuality showLabel={false} />
                 </span>
@@ -116,12 +120,12 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
               ))}
 
               {/* Toggle button for thumbnails */}
-              <button
+              {/* <button
                 className={styles.toggleThumbnails}
                 onClick={() => setThumbnailsCollapsed(!thumbnailsCollapsed)}
               >
                 {thumbnailsCollapsed ? '👥 Show participants' : '👁️ Hide participants'}
-              </button>
+              </button> */}
 
               {/* Floating participant thumbnails */}
               {!thumbnailsCollapsed && cameraTracks.length > 0 && (
@@ -146,29 +150,74 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
               )}
             </div>
 
-            {/* Chat panel - visibility controlled by ControlBar's chat button */}
-            {isChatOpen && (
+            {/* Chat Panel */}
+            {chatVisible && (
               <div className={styles.chatPanel}>
                 <div className={styles.chatHeader}>
-                  <span>💬 Chat</span>
+                  <span>Chat</span>
+                  <button 
+                    className={styles.chatCloseButton}
+                    onClick={() => setChatVisible(false)}
+                  >
+                    ✕
+                  </button>
                 </div>
-                <div className={styles.chatBody}>
-                  <Chat messageFormatter={formatChatMessageLinks} />
+                <div className={styles.chatMessages}>
+                  {chatMessages.length === 0 ? (
+                    <div className={styles.chatEmpty}>
+                      No messages yet. Say hi! 👋
+                    </div>
+                  ) : (
+                    chatMessages.map((msg, index) => (
+                      <ChatEntry
+                        key={msg.timestamp}
+                        entry={msg}
+                        messageFormatter={formatChatMessageLinks}
+                      />
+                    ))
+                  )}
+                </div>
+                <div className={styles.chatInputContainer}>
+                  <input
+                    type="text"
+                    className={styles.chatInput}
+                    placeholder="Type a message..."
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={handleKeyDown}
+                    disabled={isSending}
+                  />
+                  <button
+                    className={styles.chatSendButton}
+                    onClick={handleSendMessage}
+                    disabled={isSending || !chatInput.trim()}
+                  >
+                    Send
+                  </button>
                 </div>
               </div>
             )}
           </div>
 
-          {/* Control bar - chat button controls chat visibility via LayoutContext */}
+          {/* Control bar */}
           <ControlBar
             controls={{
               camera: true,
               microphone: true,
               screenShare: true,
-              chat: showChat,
+              chat: false,
               leave: true,
             }}
           />
+          
+          {/* Custom chat toggle button */}
+          {!chatVisible && (
+            <button 
+              className={styles.chatToggleButton}
+              onClick={() => setChatVisible(true)}
+            >
+            </button>
+          )}
         </div>
       </div>
     );
@@ -188,7 +237,7 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
                 <div className={styles.waitingText}>
                   Ready to start the WatchParty!
                 </div>
-                <div className={styles.waitingHint}>
+                    <div className={styles.waitingHint}>
                   Click &quot;Share Screen&quot; to start sharing content with everyone
                 </div>
               </div>
@@ -196,7 +245,7 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
 
             {/* Participant count and connection quality */}
             <div className={styles.participantCount}>
-              👥 {participantCount} in room
+              {participantCount} in room
               <span style={{ marginLeft: '12px' }}>
                 <ConnectionQuality showLabel={false} />
               </span>
@@ -219,29 +268,75 @@ function WatchPartyLayoutInner({ showChat = true }: WatchPartyLayoutProps) {
             )}
           </div>
 
-          {/* Chat panel - visibility controlled by ControlBar's chat button */}
-          {isChatOpen && (
+          {/* Chat Panel */}
+          {chatVisible && (
             <div className={styles.chatPanel}>
               <div className={styles.chatHeader}>
-                <span>💬 Chat</span>
+                <span>Chat</span>
+                <button 
+                  className={styles.chatCloseButton}
+                  onClick={() => setChatVisible(false)}
+                >
+                  ✕
+                </button>
               </div>
-              <div className={styles.chatBody}>
-                <Chat messageFormatter={formatChatMessageLinks} />
+              <div className={styles.chatMessages}>
+                {chatMessages.length === 0 ? (
+                  <div className={styles.chatEmpty}>
+                    No messages yet. Say hi! 👋
+                  </div>
+                ) : (
+                  chatMessages.map((msg, index) => (
+                    <ChatEntry
+                      key={msg.timestamp}
+                      entry={msg}
+                      messageFormatter={formatChatMessageLinks}
+                    />
+                  ))
+                )}
+              </div>
+              <div className={styles.chatInputContainer}>
+                <input
+                  type="text"
+                  className={styles.chatInput}
+                  placeholder="Type a message..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  disabled={isSending}
+                />
+                <button
+                  className={styles.chatSendButton}
+                  onClick={handleSendMessage}
+                  disabled={isSending || !chatInput.trim()}
+                >
+                  Send
+                </button>
               </div>
             </div>
           )}
         </div>
 
-        {/* Control bar - chat button controls chat visibility via LayoutContext */}
+        {/* Control bar */}
         <ControlBar
           controls={{
             camera: true,
             microphone: true,
             screenShare: true,
-            chat: showChat,
+            chat: false,
             leave: true,
           }}
         />
+        
+        {/* Custom chat toggle button */}
+        {!chatVisible && (
+          <button 
+            className={styles.chatToggleButton}
+            onClick={() => setChatVisible(true)}
+          >
+            💬
+          </button>
+        )}
       </div>
     </div>
   );

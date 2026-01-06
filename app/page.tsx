@@ -54,21 +54,18 @@ function DemoMeetingTab(props: { label: string }) {
   };
   return (
     <div className={styles.tabContent}>
-      <p style={{ margin: 0 }}>
-        Start a WatchParty and invite friends to watch videos together in real-time.
-      </p>
       <button style={{ marginTop: '1rem' }} className="lk-button" onClick={startWatchParty}>
-        🎬 Start WatchParty
+        Start WatchParty
       </button>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
         <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
-          <input
+          {/* <input
             id="use-e2ee"
             type="checkbox"
             checked={e2ee}
             onChange={(ev) => setE2ee(ev.target.checked)}
           ></input>
-          <label htmlFor="use-e2ee">Enable end-to-end encryption</label>
+          <label htmlFor="use-e2ee">Enable end-to-end encryption</label> */}
         </div>
         {e2ee && (
           <div style={{ display: 'flex', flexDirection: 'row', gap: '1rem' }}>
@@ -167,25 +164,21 @@ export default function Page() {
     <>
       <main className={styles.main} data-lk-theme="default">
         <div className="header">
-          <h1 style={{ fontSize: '3rem', margin: 0 }}>🎬 WatchParty</h1>
-          <h2>
-            Watch videos together with friends in real-time. Share your screen and enjoy 
-            high-quality synchronized viewing with minimal lag.
-          </h2>
+          <h1 style={{ fontSize: '3rem', margin: 0 }}>HUIHUIHUIHUIHUI</h1>
         </div>
         <Suspense fallback="Loading">
           <Tabs>
             <DemoMeetingTab label="Host" />
-            <CustomConnectionTab label="Join Custom" />
+            <CustomConnectionTab label="**ignore this tab**" />
           </Tabs>
         </Suspense>
       </main>
       <footer data-lk-theme="default">
-        Powered by{' '}
+        {/* Powered by{' '}
         <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
           LiveKit
-        </a>
-        . Built with ❤️ for watching together.
+        </a> */}
+        built by sazzan
       </footer>
     </>
   );
