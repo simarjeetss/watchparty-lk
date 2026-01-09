@@ -241,7 +241,7 @@ function WatchPartyConference(props: {
         <KeyboardShortcuts />
         {/* WatchParty uses the cinema-style layout */}
         <WatchPartyLayout />
-        <DebugMode />
+        {/* <DebugMode /> */}
         <RecordingIndicator />
       </RoomContext.Provider>
     </div>

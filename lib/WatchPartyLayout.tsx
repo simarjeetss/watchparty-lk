@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   useParticipants,
   useTracks,
@@ -15,13 +15,107 @@ import {
   LayoutContextProvider,
   useCreateLayoutContext,
   useChat,
-  ChatEntry,
-  formatChatMessageLinks,
+  ReceivedChatMessage,
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import { useScreenShare } from './useScreenShare';
 import { ConnectionQuality } from './ConnectionQuality';
 import styles from '../styles/WatchParty.module.css';
+import { format } from 'date-fns';
+import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+
+const USER_COLORS = [
+  '#f87171', // red-400
+  '#fb923c', // orange-400
+  '#fbbf24', // amber-400
+  '#a3e635', // lime-400
+  '#34d399', // emerald-400
+  '#22d3ee', // cyan-400
+  '#818cf8', // indigo-400
+  '#e879f9', // fuchsia-400
+  '#fb7185', // rose-400
+];
+
+function getUserColor(id: string) {
+  let hash = 0;
+  for (let i = 0; i < id.length; i++) {
+    hash = id.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
+}
+
+interface ChatMessagePayload {
+  text: string;
+  replyTo?: {
+    id: string;
+    sender: string;
+    text: string;
+  };
+}
+
+/**
+ * Custom Chat Entry Component
+ */
+function CustomChatEntry({ 
+  entry, 
+  onReply 
+}: { 
+  entry: ReceivedChatMessage; 
+  onReply: (entry: ReceivedChatMessage) => void; 
+}) {
+  const isLocal = !entry.from; 
+
+  let content: ChatMessagePayload = { text: entry.message };
+  try {
+    const parsed = JSON.parse(entry.message);
+    if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+      content = parsed;
+    }
+  } catch (e) {
+    // legacy/plain text message
+  }
+
+  const displayName = entry.from?.name || entry.from?.identity || 'Me';
+  const authorColor = isLocal ? undefined : getUserColor(displayName);
+
+  return (
+    <div className={`${styles.chatEntry} ${isLocal ? styles.local : ''}`}>
+      <div className={styles.chatHeaderRow}>
+        <span 
+          className={styles.chatAuthor}
+          style={authorColor ? { color: authorColor } : undefined}
+        >
+          {displayName}
+        </span>
+        <span className={styles.chatTimestamp}>
+          {format(new Date(entry.timestamp), 'h:mm a')}
+        </span>
+        <button 
+          className={styles.chatReplyButton}
+          onClick={() => onReply(entry)}
+          title="Reply to message"
+        >
+          ↩ Reply
+        </button>
+      </div>
+      
+      <div className={`${styles.chatBubble} ${!entry.from ? styles.local : ''}`}>
+        {content.replyTo && (
+          <div className={styles.chatReplyContext}>
+            <div 
+              className={styles.chatReplyAuthor}
+              style={{ color: getUserColor(content.replyTo.sender) }}
+            >
+              Replying to {content.replyTo.sender}
+            </div>
+            <div className={styles.chatReplyText}>{content.replyTo.text}</div>
+          </div>
+        )}
+        <div style={{ whiteSpace: 'pre-wrap' }}>{content.text}</div>
+      </div>
+    </div>
+  );
+}
 
 /**
  * WatchParty Layout Component
@@ -52,15 +146,73 @@ function WatchPartyLayoutInner() {
 
   const [thumbnailsCollapsed, setThumbnailsCollapsed] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);
+  const [showEmojiPicker, setShowEmojiPicker] = useState(false);
 
   // Chat functionality using useChat hook
   const { chatMessages, send, isSending } = useChat();
   const [chatInput, setChatInput] = useState('');
+  const [replyingTo, setReplyingTo] = useState<ReceivedChatMessage | null>(null);
+  const chatMessagesRef = useRef<HTMLDivElement>(null);
+  const chatInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSendMessage = () => {
+  useEffect(() => {
+    if (chatMessagesRef.current) {
+      chatMessagesRef.current.scrollTop = chatMessagesRef.current.scrollHeight;
+    }
+  }, [chatMessages, chatVisible]);
+
+  // Auto-focus input when chat becomes visible
+  useEffect(() => {
+    if (chatVisible && chatInputRef.current) {
+      setTimeout(() => {
+        chatInputRef.current?.focus();
+      }, 50);
+    }
+  }, [chatVisible]);
+
+  // Focus input when replying
+  useEffect(() => {
+    if (replyingTo && chatInputRef.current) {
+      setTimeout(() => {
+        chatInputRef.current?.focus();
+      }, 50);
+    }
+  }, [replyingTo]);
+
+  const handleSendMessage = async () => {
     if (chatInput.trim() && !isSending) {
-      send(chatInput.trim());
+      // Construct the message payload
+      const payload: ChatMessagePayload = {
+        text: chatInput.trim(),
+      };
+
+      if (replyingTo) {
+        // Parse original message in case it was a complex object
+        let originalText = replyingTo.message;
+        try {
+          const parsed = JSON.parse(replyingTo.message);
+          if (parsed && typeof parsed === 'object' && 'text' in parsed) {
+            originalText = parsed.text;
+          }
+        } catch {
+          // ignore
+        }
+
+        payload.replyTo = {
+          id: replyingTo.id,
+          sender: replyingTo.from?.name || replyingTo.from?.identity || 'Unknown',
+          text: originalText,
+        };
+      }
+
+      await send(JSON.stringify(payload));
       setChatInput('');
+      setReplyingTo(null);
+      
+      // Keep focus on input after sending
+      setTimeout(() => {
+        chatInputRef.current?.focus();
+      }, 0);
     }
   };
 
@@ -68,8 +220,49 @@ function WatchPartyLayoutInner() {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault();
       handleSendMessage();
+      setShowEmojiPicker(false);
     }
   };
+
+  const onEmojiClick = (emojiData: EmojiClickData) => {
+    const input = chatInputRef.current;
+    if (input) {
+      const start = input.selectionStart ?? chatInput.length;
+      const end = input.selectionEnd ?? chatInput.length;
+      const text = chatInput;
+      const emoji = emojiData.emoji;
+      const newText = text.substring(0, start) + emoji + text.substring(end);
+      
+      setChatInput(newText);
+      
+      // Update cursor position after render
+      setTimeout(() => {
+        input.focus();
+        const newCursorPos = start + emoji.length;
+        input.setSelectionRange(newCursorPos, newCursorPos);
+      }, 0);
+    } else {
+      setChatInput((prev) => prev + emojiData.emoji);
+    }
+  };
+
+  // Close emoji picker on Escape key
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' && showEmojiPicker) {
+        setShowEmojiPicker(false);
+        chatInputRef.current?.focus();
+      }
+    };
+
+    if (showEmojiPicker) {
+      window.addEventListener('keydown', handleGlobalKeyDown);
+    }
+
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, [showEmojiPicker]);
 
   // Get all tracks for rendering
   const screenShareTrackRefs = useTracks([Track.Source.ScreenShare]);
@@ -162,23 +355,70 @@ function WatchPartyLayoutInner() {
                     ✕
                   </button>
                 </div>
-                <div className={styles.chatMessages}>
+                <div className={styles.chatMessages} ref={chatMessagesRef}>
                   {chatMessages.length === 0 ? (
                     <div className={styles.chatEmpty}>
                       No messages yet. Say hi! 👋
                     </div>
                   ) : (
                     chatMessages.map((msg, index) => (
-                      <ChatEntry
+                      <CustomChatEntry
                         key={msg.timestamp}
                         entry={msg}
-                        messageFormatter={formatChatMessageLinks}
+                        onReply={setReplyingTo}
                       />
                     ))
                   )}
                 </div>
+                {/* Reply Preview Area */}
+                {replyingTo && (
+                  <div className={styles.replyPreview}>
+                    <div className={styles.replyPreviewContent}>
+                      <div className={styles.replyPreviewHeader}>
+                        Replying to {replyingTo.from?.name || replyingTo.from?.identity || 'Unknown'}
+                      </div>
+                      <div className={styles.replyPreviewText}>
+                        {(() => {
+                           try {
+                             const parsed = JSON.parse(replyingTo.message);
+                             return parsed.text || replyingTo.message;
+                           } catch {
+                             return replyingTo.message;
+                           }
+                        })()}
+                      </div>
+                    </div>
+                    <button 
+                      className={styles.replyPreviewClose}
+                      onClick={() => setReplyingTo(null)}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                )}
                 <div className={styles.chatInputContainer}>
+                  {showEmojiPicker && (
+                    <div className={styles.emojiPickerContainer}>
+                      <div className={styles.emojiHelpText}>
+                        Press Esc to close
+                      </div>
+                      <EmojiPicker 
+                        onEmojiClick={onEmojiClick} 
+                        theme={Theme.DARK} 
+                        width={300} 
+                        height={400}
+                      />
+                    </div>
+                  )}
+                  <button 
+                    className={styles.emojiButton}
+                    onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                    title="Add emoji"
+                  >
+                    😀
+                  </button>
                   <input
+                    ref={chatInputRef}
                     type="text"
                     className={styles.chatInput}
                     placeholder="Type a message..."
@@ -186,6 +426,7 @@ function WatchPartyLayoutInner() {
                     onChange={(e) => setChatInput(e.target.value)}
                     onKeyDown={handleKeyDown}
                     disabled={isSending}
+                    autoFocus
                   />
                   <button
                     className={styles.chatSendButton}
@@ -280,23 +521,70 @@ function WatchPartyLayoutInner() {
                   ✕
                 </button>
               </div>
-              <div className={styles.chatMessages}>
+              <div className={styles.chatMessages} ref={chatMessagesRef}>
                 {chatMessages.length === 0 ? (
                   <div className={styles.chatEmpty}>
                     No messages yet. Say hi! 👋
                   </div>
                 ) : (
                   chatMessages.map((msg, index) => (
-                    <ChatEntry
+                    <CustomChatEntry
                       key={msg.timestamp}
                       entry={msg}
-                      messageFormatter={formatChatMessageLinks}
+                      onReply={setReplyingTo}
                     />
                   ))
                 )}
               </div>
+              {/* Reply Preview Area */}
+              {replyingTo && (
+                <div className={styles.replyPreview}>
+                  <div className={styles.replyPreviewContent}>
+                    <div className={styles.replyPreviewHeader}>
+                      Replying to {replyingTo.from?.name || replyingTo.from?.identity || 'Unknown'}
+                    </div>
+                    <div className={styles.replyPreviewText}>
+                      {(() => {
+                          try {
+                            const parsed = JSON.parse(replyingTo.message);
+                            return parsed.text || replyingTo.message;
+                          } catch {
+                            return replyingTo.message;
+                          }
+                      })()}
+                    </div>
+                  </div>
+                  <button 
+                    className={styles.replyPreviewClose}
+                    onClick={() => setReplyingTo(null)}
+                  >
+                    ✕
+                  </button>
+                </div>
+              )}
               <div className={styles.chatInputContainer}>
+                {showEmojiPicker && (
+                  <div className={styles.emojiPickerContainer}>
+                    <div className={styles.emojiHelpText}>
+                      Press Esc to close
+                    </div>
+                    <EmojiPicker 
+                      onEmojiClick={onEmojiClick} 
+                      theme={Theme.DARK} 
+                      width={300} 
+                      height={400}
+                    />
+                  </div>
+                )}
+                <button 
+                  className={styles.emojiButton}
+                  onClick={() => setShowEmojiPicker(!showEmojiPicker)}
+                  title="Add emoji"
+                >
+                  😀
+                </button>
                 <input
+                  ref={chatInputRef}
                   type="text"
                   className={styles.chatInput}
                   placeholder="Type a message..."
@@ -304,6 +592,7 @@ function WatchPartyLayoutInner() {
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={handleKeyDown}
                   disabled={isSending}
+                  autoFocus
                 />
                 <button
                   className={styles.chatSendButton}
