@@ -83,7 +83,7 @@ function DemoMeetingTab(props: { label: string }) {
   );
 }
 
-function CustomConnectionTab(props: { label: string }) {
+function CustomConnectionTab() {
   const router = useRouter();
 
   const [e2ee, setE2ee] = useState(false);
@@ -103,7 +103,8 @@ function CustomConnectionTab(props: { label: string }) {
     }
   };
   return (
-    <form className={styles.tabContent} onSubmit={onSubmit}>
+    <div style={{ display: 'none'}}>
+      <form className={styles.tabContent} onSubmit={onSubmit}>
       <p style={{ marginTop: 0 }}>
         Join a WatchParty using a custom LiveKit server connection.
       </p>
@@ -153,9 +154,9 @@ function CustomConnectionTab(props: { label: string }) {
         className="lk-button"
         type="submit"
       >
-        🎥 Join WatchParty
       </button>
     </form>
+    </div>
   );
 }
 
@@ -164,21 +165,17 @@ export default function Page() {
     <>
       <main className={styles.main} data-lk-theme="default">
         <div className="header">
-          <h1 style={{ fontSize: '3rem', margin: 0 }}>SASSY</h1>
+          <h1 style={{ fontSize: '3rem', margin: 0 }}>WatchParty</h1>
         </div>
         <Suspense fallback="Loading">
-          <Tabs>
             <DemoMeetingTab label="Host" />
-            <CustomConnectionTab label="**ignore this tab**" />
-          </Tabs>
+          {/* <Tabs>
+            <CustomConnectionTab />
+          </Tabs> */}
         </Suspense>
       </main>
       <footer data-lk-theme="default">
-        {/* Powered by{' '}
-        <a href="https://livekit.io/cloud?ref=meet" rel="noopener">
-          LiveKit
-        </a> */}
-        built by sazzan
+        built by someone
       </footer>
     </>
   );

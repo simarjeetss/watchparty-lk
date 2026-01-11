@@ -10,7 +10,7 @@ export const metadata: Metadata = {
     template: '%s | WatchParty',
   },
   description:
-    'WatchParty lets you watch videos together with friends in real-time. Share your screen with high-quality streaming and minimal lag.',
+    'meow',
   twitter: {
     card: 'summary_large_image',
   },
@@ -29,7 +29,8 @@ export const metadata: Metadata = {
   icons: {
     icon: {
       rel: 'icon',
-      url: '/favicon.ico',
+      // url: '/favicon.ico',
+      url: 'test',
     },
     apple: [
       {
