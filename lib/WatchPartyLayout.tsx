@@ -44,6 +44,112 @@ function getUserColor(id: string) {
   return USER_COLORS[Math.abs(hash) % USER_COLORS.length];
 }
 
+interface DraggablePiPProps {
+  children: React.ReactNode;
+  corner: 'tl' | 'tr' | 'bl' | 'br';
+  onCornerChange: (corner: 'tl' | 'tr' | 'bl' | 'br') => void;
+  onDoubleClick: () => void;
+}
+
+function DraggablePiP({ children, corner, onCornerChange, onDoubleClick }: DraggablePiPProps) {
+  const ref = useRef<HTMLDivElement>(null);
+  const isDragging = useRef(false);
+  const startPos = useRef({ x: 0, y: 0 });
+  const hasMoved = useRef(false);
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    isDragging.current = true;
+    startPos.current = { x: e.clientX, y: e.clientY };
+    hasMoved.current = false;
+    (e.target as Element).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDragging.current || !ref.current) return;
+    
+    const dx = e.clientX - startPos.current.x;
+    const dy = e.clientY - startPos.current.y;
+    
+    if (Math.abs(dx) > 5 || Math.abs(dy) > 5) hasMoved.current = true;
+    
+    ref.current.style.transform = `translate(${dx}px, ${dy}px)`;
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDragging.current) return;
+    
+    isDragging.current = false;
+    (e.target as Element).releasePointerCapture(e.pointerId);
+
+    if (!hasMoved.current) {
+      if (ref.current) ref.current.style.transform = '';
+      return;
+    }
+
+    // Determine nearest corner based on the element's center position
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      
+      const winW = window.innerWidth;
+      const winH = window.innerHeight;
+
+      const isLeft = centerX < winW / 2;
+      const isTop = centerY < winH / 2;
+
+      const newCorner = isTop 
+        ? (isLeft ? 'tl' : 'tr') 
+        : (isLeft ? 'bl' : 'br');
+      
+      onCornerChange(newCorner);
+      ref.current.style.transform = '';
+    }
+  };
+
+  return (
+    <div 
+      ref={ref}
+      className={`${styles.pipContainer} ${styles[`pip-${corner}`]}`}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onDoubleClick={onDoubleClick}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CallDuration({ startTime }: { startTime: number }) {
+  const [elapsed, setElapsed] = useState(0);
+
+  useEffect(() => {
+    const updateTimer = () => {
+      setElapsed(Math.floor((Date.now() - startTime) / 1000));
+    };
+    
+    updateTimer(); // Initial update
+    const timer = setInterval(updateTimer, 1000);
+    return () => clearInterval(timer);
+  }, [startTime]);
+
+  const formatTime = (seconds: number) => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return h > 0 
+      ? `${h}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`
+      : `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  };
+
+  return (
+    <div className={styles.callTimer}>
+      {formatTime(elapsed)}
+    </div>
+  );
+}
+
 interface ChatMessagePayload {
   text: string;
   replyTo?: {
@@ -144,9 +250,15 @@ function WatchPartyLayoutInner() {
     participantCount,
   } = useScreenShare();
 
+  const startTime = React.useMemo(() => Date.now(), []);
+
   const [thumbnailsCollapsed, setThumbnailsCollapsed] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+  
+  // PiP State
+  const [pipCorner, setPipCorner] = useState<'tl' | 'tr' | 'bl' | 'br'>('br');
+  const [swapPiP, setSwapPiP] = useState(false);
 
   // Chat functionality using useChat hook
   const { chatMessages, send, isSending } = useChat();
@@ -272,6 +384,20 @@ function WatchPartyLayoutInner() {
     Track.Source.Camera,
     Track.Source.Microphone,
   ]);
+
+  // Filter tracks to avoid showing both camera and mic tiles for the same participant
+  // We prioritize camera tracks. If a user has a camera track, we hide their mic track tile.
+  const filteredParticipantTracks = participantTracks.filter(track => {
+    if (track.source === Track.Source.Camera) return true;
+    if (track.source === Track.Source.Microphone) {
+      const hasCamera = participantTracks.some(t => 
+        t.participant.identity === track.participant.identity && 
+        t.source === Track.Source.Camera
+      );
+      return !hasCamera;
+    }
+    return false;
+  });
 
   const participants = useParticipants();
 
@@ -441,15 +567,19 @@ function WatchPartyLayoutInner() {
           </div>
 
           {/* Control bar */}
-          <ControlBar
-            controls={{
-              camera: true,
-              microphone: true,
-              screenShare: true,
-              chat: false,
-              leave: true,
-            }}
-          />
+          <div className={styles.bottomBarContainer}>
+            <div className={styles.leftControlsPlaceholder} />
+            <ControlBar
+              controls={{
+                camera: true,
+                microphone: true,
+                screenShare: true,
+                chat: false,
+                leave: true,
+              }}
+            />
+            <CallDuration startTime={startTime} />
+          </div>
           
           {/* Custom chat toggle button */}
           {!chatVisible && (
@@ -476,7 +606,7 @@ function WatchPartyLayoutInner() {
               <div className={styles.waitingState}>
                 {/* <div className={styles.waitingIcon}>🎬</div> */}
                 <div className={styles.waitingText}>
-                  Ready to start the WatchParty!
+                  {/* Ready to start the WatchParty! */}
                 </div>
                     <div className={styles.waitingHint}>
                   Click &quot;Share Screen&quot; to start sharing content with everyone
@@ -492,14 +622,50 @@ function WatchPartyLayoutInner() {
               </span>
             </div>
 
-            {/* Grid layout for participants */}
-            {cameraTracks.length > 0 && (
-              <GridLayout tracks={participantTracks}>
-                <ParticipantTile />
-              </GridLayout>
+            {/* Grid layout for participants or 1v1 PiP Layout */}
+            {filteredParticipantTracks.length > 0 && (
+              filteredParticipantTracks.length === 2 ? (
+                // 1v1 PiP Layout
+                (() => {
+                  const localTrack = filteredParticipantTracks.find(t => t.participant.isLocal);
+                  const remoteTrack = filteredParticipantTracks.find(t => !t.participant.isLocal);
+                  
+                  // Default: Main=Remote, PiP=Local. If swapped: Main=Local, PiP=Remote
+                  const mainTrack = swapPiP ? localTrack : remoteTrack;
+                  const pipTrack = swapPiP ? remoteTrack : localTrack;
+                  
+                  // Fallbacks just in case
+                  const finalMain = mainTrack || filteredParticipantTracks[0];
+                  const finalPip = pipTrack || filteredParticipantTracks[1];
+
+                  return (
+                    <div className={styles.pipLayout}>
+                      <div className={styles.mainVideo}>
+                        <TrackRefContext.Provider value={finalMain}>
+                           <ParticipantTile />
+                        </TrackRefContext.Provider>
+                      </div>
+                      <DraggablePiP 
+                        corner={pipCorner} 
+                        onCornerChange={setPipCorner}
+                        onDoubleClick={() => setSwapPiP(!swapPiP)}
+                      >
+                         <TrackRefContext.Provider value={finalPip}>
+                           <ParticipantTile />
+                        </TrackRefContext.Provider>
+                      </DraggablePiP>
+                    </div>
+                  );
+                })()
+              ) : (
+                // Standard Grid for 1 or 3+ participants
+                <GridLayout tracks={filteredParticipantTracks}>
+                  <ParticipantTile />
+                </GridLayout>
+              )
             )}
 
-            {cameraTracks.length === 0 && participantCount === 1 && (
+            {filteredParticipantTracks.length === 0 && participantCount === 1 && (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <div style={{ maxWidth: '400px', maxHeight: '300px', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
                   <p>Camera is off</p>
@@ -607,15 +773,19 @@ function WatchPartyLayoutInner() {
         </div>
 
         {/* Control bar */}
-        <ControlBar
-          controls={{
-            camera: true,
-            microphone: true,
-            screenShare: true,
-            chat: false,
-            leave: true,
-          }}
-        />
+        <div className={styles.bottomBarContainer}>
+          <div className={styles.leftControlsPlaceholder} />
+          <ControlBar
+            controls={{
+              camera: true,
+              microphone: true,
+              screenShare: true,
+              chat: false,
+              leave: true,
+            }}
+          />
+          <CallDuration startTime={startTime} />
+        </div>
         
         {/* Custom chat toggle button */}
         {!chatVisible && (
