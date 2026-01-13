@@ -379,6 +379,8 @@ function WatchPartyLayoutInner() {
   // Get all tracks for rendering
   const screenShareTrackRefs = useTracks([Track.Source.ScreenShare]);
   const screenShareAudioTrackRefs = useTracks([Track.Source.ScreenShareAudio]);
+  // Ensure microphone audio tracks are rendered (even if we hide mic tiles)
+  const micTrackRefs = useTracks([Track.Source.Microphone]);
   const cameraTracks = useTracks([Track.Source.Camera]);
   const participantTracks = useTracks([
     Track.Source.Camera,
@@ -437,6 +439,15 @@ function WatchPartyLayoutInner() {
               {screenShareAudioTrackRefs.map((trackRef) => (
                 <AudioTrack key={trackRef.publication?.trackSid} trackRef={trackRef} />
               ))}
+
+              {/* Always render microphone audio tracks (hidden) so audio plays even when
+                  we filter mic tiles out of the grid. This container is visually hidden
+                  but keeps the AudioTrack components mounted and playing. */}
+              <div style={{ display: 'none' }} aria-hidden>
+                {micTrackRefs.map((trackRef) => (
+                  <AudioTrack key={trackRef.publication?.trackSid} trackRef={trackRef} />
+                ))}
+              </div>
 
               {/* Toggle button for thumbnails */}
               {/* <button
@@ -664,6 +675,13 @@ function WatchPartyLayoutInner() {
                 </GridLayout>
               )
             )}
+
+            {/* Hidden mic audio container for gallery mode as well */}
+            <div style={{ display: 'none' }} aria-hidden>
+              {micTrackRefs.map((trackRef) => (
+                <AudioTrack key={trackRef.publication?.trackSid} trackRef={trackRef} />
+              ))}
+            </div>
 
             {filteredParticipantTracks.length === 0 && participantCount === 1 && (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
