@@ -41,6 +41,7 @@ export function WatchPartyRoom(props: {
   hq: boolean;
   codec: VideoCodec;
 }) {
+  const router = useRouter();
   const [preJoinChoices, setPreJoinChoices] = React.useState<LocalUserChoices | undefined>(
     undefined,
   );
@@ -72,18 +73,101 @@ export function WatchPartyRoom(props: {
   const handlePreJoinError = React.useCallback((e: any) => console.error(e), []);
 
   return (
-    <main data-lk-theme="default" style={{ height: '100%' }}>
+    <main data-lk-theme="default" style={{ height: '100%', background: 'var(--bg, #0a0a0a)' }}>
       {connectionDetails === undefined || preJoinChoices === undefined ? (
-        <div style={{ display: 'grid', placeItems: 'center', height: '100%' }}>
-          <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
-            <h1 style={{ fontSize: '2rem', marginBottom: '0.5rem' }}>WatchParty</h1>
-            <p style={{ color: 'rgba(255,255,255,0.7)' }}>Join the room to watch together</p>
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          justifyContent: 'center',
+          height: '100%',
+          padding: '4rem 5vw',
+          position: 'relative',
+          gap: '2.5rem',
+        }}>
+          {/* Room label */}
+          <span style={{
+            position: 'absolute',
+            top: '2rem',
+            left: '5vw',
+            fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+            fontSize: '0.65rem',
+            color: 'var(--fg-3, #525050)',
+            letterSpacing: '0.08em',
+            textTransform: 'uppercase',
+          }}>
+            Room / {props.roomId}
+          </span>
+
+          {/* Heading */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '0.5rem',
+            animation: 'fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) both',
+          }}>
+            <h1 style={{
+              fontFamily: 'var(--font-serif, "Instrument Serif", serif)',
+              fontStyle: 'italic',
+              fontSize: 'clamp(2.5rem, 6vw, 4.5rem)',
+              fontWeight: 400,
+              lineHeight: 1,
+              letterSpacing: '-0.02em',
+              color: 'var(--fg, #f0ede8)',
+              margin: 0,
+            }}>
+              Join<span style={{ color: 'var(--accent, #e05c4a)' }}>.</span>
+            </h1>
+            <p style={{
+              fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+              fontSize: '0.68rem',
+              color: 'var(--fg-3, #525050)',
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              margin: 0,
+            }}>
+              Set up your devices, then enter the room
+            </p>
           </div>
-          <PreJoin
-            defaults={preJoinDefaults}
-            onSubmit={handlePreJoinSubmit}
-            onError={handlePreJoinError}
-          />
+
+          {/* PreJoin — themed wrapper */}
+          <div className="wp-prejoin-wrapper" style={{
+            width: '100%',
+            maxWidth: 460,
+            animation: 'fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.12s both',
+          }}>
+            <PreJoin
+              defaults={preJoinDefaults}
+              onSubmit={handlePreJoinSubmit}
+              onError={handlePreJoinError}
+            />
+          </div>
+
+          {/* Back button */}
+          <button
+            onClick={() => router.push('/')}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '0.5rem',
+              fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+              fontSize: '0.65rem',
+              color: 'var(--fg-3, #525050)',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              padding: '0.25rem 0',
+              transition: 'color 0.2s',
+              animation: 'fadeUp 0.8s cubic-bezier(0.16,1,0.3,1) 0.2s both',
+            }}
+            onMouseEnter={e => (e.currentTarget.style.color = 'var(--fg-2, #8a8585)')}
+            onMouseLeave={e => (e.currentTarget.style.color = 'var(--fg-3, #525050)')}
+          >
+            ← Go back
+          </button>
         </div>
       ) : (
         <WatchPartyConference
