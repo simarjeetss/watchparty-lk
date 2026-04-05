@@ -2,9 +2,92 @@
   box-sizing: border-box;
 }
 
+/* ─────────────────────────────────────────
+   Global loader — square stroke spinner
+   Coherent with the zero-radius, mono-type
+   design language.
+   ───────────────────────────────────────── */
+
+/* Thin square that draws itself clockwise */
+@keyframes wp-spin {
+  0%   { stroke-dashoffset: 112; }
+  100% { stroke-dashoffset: 0; }
+}
+
+/* Slow pulse on the whole SVG so it breathes */
+@keyframes wp-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}
+
+/* Full-screen loading veil */
+.wp-page-loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: var(--bg, #0a0a0a);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.75rem;
+}
+
+/* The spinning square SVG wrapper */
+.wp-page-loader__icon {
+  animation: wp-pulse 2s ease-in-out infinite;
+}
+
+.wp-page-loader__icon svg rect {
+  fill: none;
+  stroke: var(--fg-3, #4a4747);
+  stroke-width: 1.5;
+  stroke-dasharray: 112;
+  stroke-dashoffset: 112;
+  animation: wp-spin 1.6s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+.wp-page-loader__label {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--fg-3, #4a4747);
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+/* ── Dark (default) ── */
+:root {
+  --bg:    #0a0a0a;
+  --bg-1:  #111111;
+  --fg:    #f0ede8;
+  --fg-2:  #8a8585;
+  --fg-3:  #4a4747;
+  --rule:  #1f1f1f;
+  --accent: #e05c4a;
+  --font-mono:  'DM Mono', monospace;
+  --font-serif: 'Instrument Serif', serif;
+}
+
+/* ── Light ── */
+[data-theme="light"] {
+  --bg:    #f5f2ee;
+  --bg-1:  #ede9e4;
+  --fg:    #1a1714;
+  --fg-2:  #6b6560;
+  --fg-3:  #a09a94;
+  --rule:  #ddd8d2;
+  --accent: #d9521e;
+}
+
 html {
   color-scheme: dark;
-  background-color: #111;
+  background-color: var(--bg);
+  transition: background-color 0.25s, color 0.25s;
+}
+
+[data-theme="light"] html,
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 html,
@@ -18,50 +101,286 @@ body {
 body {
   display: flex;
   flex-direction: column;
-}
-
-.header {
-  max-width: 500px;
-  padding-inline: 2rem;
-}
-
-.header > img {
-  display: block;
-  margin: auto;
-  max-width: 100%;
-}
-
-.header > h2 {
-  font-family: 'TWK Everett', sans-serif;
-  font-style: normal;
-  font-weight: 400;
-  font-size: 1.25rem;
-  line-height: 144%;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
+  color: var(--fg);
+  font-family: var(--font-mono);
+  background-color: var(--bg);
+  transition: background-color 0.25s, color 0.25s;
 }
 
 footer {
   width: 100%;
-  padding: 1.5rem 2rem;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.6);
-  background-color: var(--lk-bg);
-  border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 1rem 6vw;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--fg-3);
+  background-color: var(--bg);
+  border-top: 1px solid var(--rule);
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  flex-shrink: 0;
 }
 
-footer a,
-h2 a {
-  color: #ff6352;
-  text-decoration-color: #a33529;
-  text-underline-offset: 0.125em;
-}
-
-footer a:hover,
-h2 a {
-  text-decoration-color: #ff6352;
-}
-
-h2 a {
+footer a {
+  color: var(--fg-3);
   text-decoration: none;
+  transition: color 0.15s;
+}
+
+footer a:hover {
+  color: var(--fg-2);
+}
+
+/* ─── Legacy header class (unused, kept for safety) ─── */
+.header {
+  display: none;
+}
+
+/* ═══════════════════════════════════════
+   PreJoin — theme override
+   Remaps --lk-* to our design tokens so
+   the LiveKit PreJoin widget matches the
+   page theme in both dark and light modes.
+   ═══════════════════════════════════════ */
+
+.wp-prejoin-wrapper {
+  /* Structural */
+  --lk-border-radius: 0px;
+  --lk-font-family: 'DM Mono', monospace;
+  --lk-font-size: 13px;
+  --lk-line-height: 1.5;
+
+  /* Dark-mode colours (default) */
+  --lk-bg:           var(--bg);
+  --lk-fg:           var(--fg);
+  --lk-border-color: var(--rule);
+
+  /* Controls */
+  --lk-bg2:  var(--bg-1);
+  --lk-bg3:  #1a1a1a;
+  --lk-bg4:  #222222;
+  --lk-bg5:  #2a2a2a;
+  --lk-control-bg:          var(--bg-1);
+  --lk-control-fg:          var(--fg);
+  --lk-control-hover-bg:    #1c1c1c;
+  --lk-control-active-bg:   #242424;
+
+  /* Join button → our accent */
+  --lk-accent-bg:  var(--accent);
+  --lk-accent-fg:  #ffffff;
+  --lk-accent2:    color-mix(in srgb, var(--accent) 85%, #000);
+  --lk-accent3:    color-mix(in srgb, var(--accent) 70%, #000);
+  --lk-accent4:    color-mix(in srgb, var(--accent) 60%, #000);
+}
+
+/* Light overrides */
+[data-theme="light"] .wp-prejoin-wrapper {
+  --lk-bg:           var(--bg);
+  --lk-fg:           var(--fg);
+  --lk-border-color: var(--rule);
+  --lk-bg2:          var(--bg-1);
+  --lk-bg3:          #e0dbd5;
+  --lk-bg4:          #d8d2cc;
+  --lk-bg5:          #d0c9c2;
+  --lk-control-bg:          var(--bg-1);
+  --lk-control-fg:          var(--fg);
+  --lk-control-hover-bg:    #e6e1db;
+  --lk-control-active-bg:   #ddd8d1;
+  --lk-accent-bg:  var(--accent);
+  --lk-accent-fg:  #ffffff;
+  --lk-accent2:    color-mix(in srgb, var(--accent) 85%, #fff);
+  --lk-accent3:    color-mix(in srgb, var(--accent) 70%, #fff);
+  --lk-accent4:    color-mix(in srgb, var(--accent) 60%, #fff);
+}
+
+/* Remove card shadow & round corners from the widget itself */
+.wp-prejoin-wrapper .lk-prejoin {
+  background: transparent;
+  padding: 0;
+  gap: 0.875rem;
+}
+
+/* Video preview: sharp corners, border using our rule color */
+.wp-prejoin-wrapper .lk-prejoin .lk-video-container {
+  border-radius: 0 !important;
+  border: 1px solid var(--rule);
+  overflow: hidden;
+  background-color: var(--bg-1) !important;
+}
+
+/* Camera-off placeholder */
+.wp-prejoin-wrapper .lk-prejoin .lk-camera-off-note {
+  background-color: var(--bg-1) !important;
+}
+
+/* Input field */
+.wp-prejoin-wrapper .lk-form-control {
+  border-radius: 0 !important;
+  background-color: var(--bg-1) !important;
+  border-color: var(--rule) !important;
+  color: var(--fg) !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 0.8rem !important;
+}
+
+/* Dropdown buttons */
+.wp-prejoin-wrapper .lk-button {
+  border-radius: 0 !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.04em !important;
+  border-color: var(--rule) !important;
+}
+
+/* Join button */
+.wp-prejoin-wrapper .lk-join-button {
+  letter-spacing: 0.08em !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+}
+
+/* ═══════════════════════════════════════
+   LiveKit theme token overrides (global)
+   Remaps --lk-* to our design tokens so
+   the control bar, participant tiles, and
+   device menus adapt to both themes.
+   !important needed because @livekit/
+   components-styles loads after this file.
+   ═══════════════════════════════════════ */
+
+[data-lk-theme="default"] {
+  /* Core surfaces */
+  --lk-bg:           var(--bg) !important;
+  --lk-bg2:          var(--bg-1) !important;
+  --lk-bg3:          color-mix(in srgb, var(--bg-1) 80%, var(--fg) 10%) !important;
+  --lk-bg4:          color-mix(in srgb, var(--bg-1) 65%, var(--fg) 14%) !important;
+  --lk-bg5:          color-mix(in srgb, var(--bg-1) 50%, var(--fg) 18%) !important;
+
+  /* Text */
+  --lk-fg:           var(--fg) !important;
+  --lk-fg2:          var(--fg) !important;
+  --lk-fg3:          var(--fg-2) !important;
+  --lk-fg4:          var(--fg-2) !important;
+  --lk-fg5:          var(--fg-3) !important;
+
+  /* Borders & shape */
+  --lk-border-color: var(--rule) !important;
+  --lk-border-radius: 2px !important;
+
+  /* Controls */
+  --lk-control-bg:              var(--bg-1) !important;
+  --lk-control-fg:              var(--fg) !important;
+  --lk-control-hover-bg:        color-mix(in srgb, var(--bg-1) 70%, var(--fg) 12%) !important;
+  --lk-control-active-bg:       color-mix(in srgb, var(--bg-1) 50%, var(--fg) 18%) !important;
+  --lk-control-active-hover-bg: color-mix(in srgb, var(--bg-1) 30%, var(--fg) 22%) !important;
+
+  /* Accent → orange */
+  --lk-accent-bg:  var(--accent) !important;
+  --lk-accent-fg:  #ffffff !important;
+  --lk-accent2:    color-mix(in srgb, var(--accent) 85%, #000) !important;
+  --lk-accent3:    color-mix(in srgb, var(--accent) 70%, #000) !important;
+  --lk-accent4:    color-mix(in srgb, var(--accent) 55%, #000) !important;
+
+  /* Danger (leave button) */
+  --lk-danger:     #c94030 !important;
+  --lk-danger2:    #b03828 !important;
+  --lk-danger3:    #973020 !important;
+  --lk-danger4:    #7e2818 !important;
+  --lk-danger-fg:  #ffffff !important;
+
+  /* Shadows */
+  --lk-box-shadow:  0 4px 24px rgba(0, 0, 0, 0.18) !important;
+  --lk-drop-shadow: none !important;
+
+  /* Typography */
+  --lk-font-family: 'DM Mono', monospace !important;
+  --lk-font-size:   13px !important;
+}
+
+/* ── Direct property overrides ─────────────────────────────
+   CSS custom properties cascade correctly but some LiveKit
+   components set background-color inline or via specificity
+   that wins over var(). These direct rules ensure the
+   control bar, buttons, and menus always use our surface. */
+
+/* Control bar strip */
+[data-lk-theme="default"] .lk-control-bar {
+  background-color: var(--bg-1) !important;
+  border-top-color: var(--rule) !important;
+}
+
+/* Every button EXCEPT the join button (mic, camera, share screen, chat toggle) */
+[data-lk-theme="default"] .lk-button:not(.lk-join-button),
+[data-lk-theme="default"] .lk-disconnect-button,
+[data-lk-theme="default"] .lk-chat-toggle {
+  background-color: var(--bg-1) !important;
+  color: var(--fg) !important;
+  border-radius: 2px !important;
+  font-family: 'DM Mono', monospace !important;
+  font-size: 0.75rem !important;
+  letter-spacing: 0.04em !important;
+  border-color: var(--rule) !important;
+}
+
+[data-lk-theme="default"] .lk-button:not(.lk-join-button):hover,
+[data-lk-theme="default"] .lk-chat-toggle:hover {
+  background-color: color-mix(in srgb, var(--bg-1) 70%, var(--fg) 12%) !important;
+}
+
+/* Leave button — keep it danger-toned */
+[data-lk-theme="default"] .lk-disconnect-button {
+  color: var(--accent) !important;
+  border: 1px solid var(--accent) !important;
+  background-color: transparent !important;
+}
+
+[data-lk-theme="default"] .lk-disconnect-button:hover {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Screen-share active state → accent fill */
+[data-lk-theme="default"] .lk-button[data-lk-source=screen_share][data-lk-enabled=true] {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Device menus (dropdown popover) */
+[data-lk-theme="default"] .lk-device-menu {
+  background-color: var(--bg-1) !important;
+  border-color: var(--rule) !important;
+  border-radius: 2px !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Active device in dropdown → accent */
+[data-lk-theme="default"] .lk-media-device-select [data-lk-active=true] > .lk-button {
+  background-color: var(--accent) !important;
+  color: #fff !important;
+}
+
+/* Chat panel */
+[data-lk-theme="default"] .lk-chat {
+  background-color: var(--bg) !important;
+  border-left-color: var(--rule) !important;
+}
+
+[data-lk-theme="default"] .lk-chat-header {
+  border-bottom-color: var(--rule) !important;
+}
+
+[data-lk-theme="default"] .lk-chat-form {
+  border-top-color: var(--rule) !important;
+}
+
+/* Participant tile placeholder */
+[data-lk-theme="default"] .lk-participant-placeholder {
+  background-color: var(--bg-1) !important;
+}
+
+/* Room container base */
+[data-lk-theme="default"] .lk-room-container {
+  background-color: var(--bg) !important;
 }

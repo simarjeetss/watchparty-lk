@@ -5,6 +5,9 @@ import type { Metadata, Viewport } from 'next';
 import { Toaster } from 'react-hot-toast';
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_BASE_URL ?? 'https://watchparty.app',
+  ),
   title: {
     default: 'WatchParty | Watch Videos Together in Real-Time',
     template: '%s | WatchParty',
@@ -48,9 +51,34 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
+      <head>
+        {/* Apply saved theme before first paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){try{var t=localStorage.getItem('wp-theme');if(t==='light'){document.documentElement.setAttribute('data-theme','light');document.documentElement.style.colorScheme='light';}}catch(e){}})()`,
+          }}
+        />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Mono:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+          rel="stylesheet"
+        />
+      </head>
       <body data-lk-theme="default">
-        <Toaster />
+        <Toaster
+          toastOptions={{
+            style: {
+              background: '#141414',
+              color: '#f0ede8',
+              border: '1px solid #2a2a2a',
+              borderRadius: '2px',
+              fontFamily: "'DM Mono', monospace",
+              fontSize: '0.8rem',
+            },
+          }}
+        />
         {children}
       </body>
     </html>

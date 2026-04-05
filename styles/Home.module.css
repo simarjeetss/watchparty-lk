@@ -1,40 +1,298 @@
+/* ─────────────────────────────────────────
+   Home — Minimal Landing
+   ───────────────────────────────────────── */
+
 .main {
   position: relative;
-  display: grid;
-  gap: 1rem;
-  justify-content: center;
-  place-content: center;
-  justify-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-end;
+  padding: 4rem 6vw 5rem;
   overflow: auto;
   flex-grow: 1;
+  min-height: 0;
 }
 
-.tabContainer {
-  width: 100%;
-  max-width: 500px;
-  padding-inline: 2rem;
+/* Faint grid overlay */
+.main::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(var(--rule, rgba(255,255,255,0.025)) 1px, transparent 1px),
+    linear-gradient(90deg, var(--rule, rgba(255,255,255,0.025)) 1px, transparent 1px);
+  background-size: 80px 80px;
+  opacity: 0.5;
+  pointer-events: none;
+  z-index: 0;
 }
 
-.tabSelect {
+.landingInner {
+  position: relative;
+  z-index: 1;
   display: flex;
-  justify-content: stretch;
-  gap: 0.125rem;
-  padding: 0.125rem;
-  margin: 0 auto 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 600px;
 }
 
-.tabSelect > * {
+/* ─── Wordmark ─── */
+.wordmark {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: clamp(3.5rem, 8vw, 6rem);
+  font-weight: 400;
+  color: var(--fg, #f0ede8);
+  letter-spacing: -0.02em;
+  line-height: 1;
+  margin: 0 0 0.3rem 0;
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.wordmarkAccent {
+  color: var(--fg-3, #4a4747);
+}
+
+:global([data-theme="light"]) .wordmarkAccent {
+  color: var(--accent, #d9521e);
+}
+
+.tagline {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.72rem;
+  font-weight: 400;
+  color: var(--fg-3, #4a4747);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin: 0 0 3rem 0;
+  animation: fadeUp 0.6s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* ─── Start section ─── */
+.startSection {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1.25rem;
+  animation: fadeUp 0.6s 0.16s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.startButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: var(--fg, #f0ede8);
+  color: var(--bg, #0a0a0a);
+  border: none;
+  padding: 0.875rem 2rem;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: opacity 0.2s;
+  white-space: nowrap;
+}
+
+.startButton:hover {
+  opacity: 0.85;
+}
+
+.startButton:active {
+  opacity: 0.7;
+}
+
+.startButtonArrow {
+  font-size: 0.9rem;
+  transition: transform 0.2s;
+}
+
+.startButton:hover .startButtonArrow {
+  transform: translateX(3px);
+}
+
+.startHint {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  color: var(--fg-3, #4a4747);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+/* ─── Divider rule ─── */
+.rule {
   width: 100%;
+  max-width: 600px;
+  border: none;
+  border-top: 1px solid var(--rule, #1f1f1f);
+  margin: 3rem 0;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s 0.24s cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* ─── Feature list ─── */
+.featureList {
+  display: flex;
+  flex-direction: row;
+  gap: 3rem;
+  position: relative;
+  z-index: 1;
+  animation: fadeUp 0.6s 0.28s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.featureItem {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.featureLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--fg-3, #4a4747);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.featureValue {
+  font-family: 'Instrument Serif', serif;
+  font-style: italic;
+  font-size: 1.1rem;
+  color: var(--fg-2, #8a8585);
+}
+
+/* ─── Theme toggle ─── */
+.themeToggle {
+  position: absolute;
+  top: 2rem;
+  left: 6vw;
+  z-index: 1;
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0;
+  animation: fadeIn 1s 0.5s both;
+}
+
+.themeToggleTrack {
+  width: 28px;
+  height: 16px;
+  border: 1px solid var(--fg-3);
+  position: relative;
+  transition: border-color 0.2s;
+  flex-shrink: 0;
+}
+
+.themeToggle:hover .themeToggleTrack {
+  border-color: var(--fg-2);
+}
+
+.themeToggleThumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 10px;
+  height: 10px;
+  background: var(--fg-3);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.themeToggle[data-active="true"] .themeToggleThumb {
+  transform: translateX(12px);
+  background: var(--accent);
+}
+
+.themeToggle:hover .themeToggleThumb {
+  background: var(--fg-2);
+}
+
+.themeToggle[data-active="true"]:hover .themeToggleThumb {
+  background: var(--accent);
+  opacity: 0.8;
+}
+
+.themeToggleLabel {
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--fg-3);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.2s;
+  user-select: none;
+}
+
+.themeToggle:hover .themeToggleLabel {
+  color: var(--fg-2);
+}
+
+/* ─── Corner label (top right) ─── */
+.cornerLabel {
+  position: absolute;
+  top: 2rem;
+  right: 6vw;
+  z-index: 1;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.62rem;
+  color: var(--fg-3, #4a4747);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  transform: rotate(180deg);
+  animation: fadeIn 1s 0.5s both;
+}
+
+/* ─── Animations ─── */
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+/* Square spinner inside the start button */
+@keyframes spinnerDraw {
+  0%   { stroke-dashoffset: 52; }
+  100% { stroke-dashoffset: 0; }
+}
+
+.buttonSpinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  flex-shrink: 0;
+}
+
+.buttonSpinner rect {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-dasharray: 52;
+  stroke-dashoffset: 52;
+  animation: spinnerDraw 1.2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* ─── Legacy (kept for CustomConnectionTab, hidden) ─── */
+.tabContainer { display: none; }
+.tabSelect    { display: none; }
 .tabContent {
   display: flex;
-  justify-content: center;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 1.5rem;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  border-radius: 0.5rem;
 }

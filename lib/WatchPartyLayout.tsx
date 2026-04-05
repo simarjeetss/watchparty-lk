@@ -255,6 +255,17 @@ function WatchPartyLayoutInner() {
   const [thumbnailsCollapsed, setThumbnailsCollapsed] = useState(false);
   const [chatVisible, setChatVisible] = useState(true);
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Track page theme for emoji picker
+  const [isLightTheme, setIsLightTheme] = useState(false);
+  useEffect(() => {
+    const check = () =>
+      setIsLightTheme(document.documentElement.getAttribute('data-theme') === 'light');
+    check();
+    const observer = new MutationObserver(check);
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    return () => observer.disconnect();
+  }, []);
   
   // PiP State
   const [pipCorner, setPipCorner] = useState<'tl' | 'tr' | 'bl' | 'br'>('br');
@@ -541,7 +552,7 @@ function WatchPartyLayoutInner() {
                       </div>
                       <EmojiPicker 
                         onEmojiClick={onEmojiClick} 
-                        theme={Theme.DARK} 
+                        theme={isLightTheme ? Theme.LIGHT : Theme.DARK} 
                         width={300} 
                         height={400}
                       />
@@ -685,9 +696,23 @@ function WatchPartyLayoutInner() {
 
             {filteredParticipantTracks.length === 0 && participantCount === 1 && (
               <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <div style={{ maxWidth: '400px', maxHeight: '300px', color: 'rgba(255,255,255,0.6)', textAlign: 'center' }}>
-                  <p>Camera is off</p>
-                  <p style={{ fontSize: '14px' }}>Enable your camera or wait for others to join</p>
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem' }}>
+                  <p style={{
+                    fontFamily: 'var(--font-serif, "Instrument Serif", serif)',
+                    fontStyle: 'italic',
+                    fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+                    fontWeight: 400,
+                    color: 'var(--fg, #f0ede8)',
+                    margin: 0,
+                  }}>Camera is off</p>
+                  <p style={{
+                    fontFamily: 'var(--font-mono, "DM Mono", monospace)',
+                    fontSize: '0.68rem',
+                    color: 'var(--fg-3, #4a4747)',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    margin: 0,
+                  }}>Waiting for others to join.....</p>
                 </div>
               </div>
             )}
@@ -754,7 +779,7 @@ function WatchPartyLayoutInner() {
                     </div>
                     <EmojiPicker 
                       onEmojiClick={onEmojiClick} 
-                      theme={Theme.DARK} 
+                      theme={isLightTheme ? Theme.LIGHT : Theme.DARK} 
                       width={300} 
                       height={400}
                     />
