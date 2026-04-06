@@ -1,9 +1,9 @@
 'use client';
 
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { Suspense, useState } from 'react';
 import { generateRoomId } from '@/lib/client-utils';
-import { ThemeToggle } from '@/lib/ThemeToggle';
 import styles from '../styles/Home.module.css';
 
 function StartSection() {
@@ -17,30 +17,36 @@ function StartSection() {
 
   return (
     <div className={styles.startSection}>
-      <button
-        className={styles.startButton}
-        onClick={handleStart}
-        disabled={loading}
-      >
-        {loading ? (
-          <>
-            <svg
-              className={styles.buttonSpinner}
-              viewBox="0 0 14 14"
-              xmlns="http://www.w3.org/2000/svg"
-              aria-hidden="true"
-            >
-              <rect x="1" y="1" width="12" height="12" />
-            </svg>
-            Creating…
-          </>
-        ) : (
-          <>
-            Start a room
-            <span className={styles.startButtonArrow}>→</span>
-          </>
-        )}
-      </button>
+      <div className={styles.startActions}>
+        <button
+          className={styles.startButton}
+          onClick={handleStart}
+          disabled={loading}
+        >
+          {loading ? (
+            <>
+              <svg
+                className={styles.buttonSpinner}
+                viewBox="0 0 14 14"
+                xmlns="http://www.w3.org/2000/svg"
+                aria-hidden="true"
+              >
+                <rect x="1" y="1" width="12" height="12" />
+              </svg>
+              Creating…
+            </>
+          ) : (
+            <>
+              Start a room
+              <span className={styles.startButtonArrow}>→</span>
+            </>
+          )}
+        </button>
+
+        <Link href="/about" className={styles.secondaryButton}>
+          for nerds 🤓
+        </Link>
+      </div>
       <span className={styles.startHint}>
         No account required · Share the link to invite
       </span>
@@ -52,14 +58,16 @@ export default function Page() {
   return (
     <>
       <main className={styles.main} data-lk-theme="default">
-        <ThemeToggle />
         <span className={styles.cornerLabel}>Watch Together</span>
 
         <div className={styles.landingInner}>
           <h1 className={styles.wordmark}>
             Watch<span className={styles.wordmarkAccent}>Party</span>
           </h1>
-          <p className={styles.tagline}>Real-time · Synchronized · Effortless</p>
+          <p className={styles.tagline}></p>
+          <p className={styles.editorialNote}>
+            built this because all other watchparty tools are shit
+          </p>
 
           <Suspense fallback={null}>
             <StartSection />
