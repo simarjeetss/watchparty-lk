@@ -705,6 +705,12 @@
 
 /* ─── Tablet (≤ 768px) ─── */
 @media (max-width: 768px) {
+  .watchPartyContainer :global(.lk-control-bar) {
+    flex: 1 1 auto;
+    min-width: 0;
+    justify-content: center;
+  }
+
   .roomActions {
     top: 0.75rem;
     right: 0.75rem;
@@ -758,6 +764,24 @@
   .bottomBarContainer {
     padding: 0 0.5rem;
     min-height: 56px;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  .callTimer {
+    display: none;
+  }
+
+  .leftControlsPlaceholder {
+    display: none;
+  }
+
+  .chatToggleButton {
+    flex: 0 0 auto;
+    min-width: 44px;
+    padding: 0 0.75rem;
+    border-right: none;
+    border-left: 1px solid var(--rule);
   }
 
   /* Collapse gallery columns */
@@ -820,14 +844,7 @@
     padding: 0 0.25rem;
     min-height: 52px;
     flex-shrink: 0;
-  }
-
-  .callTimer {
-    display: none; /* hide timer on mobile to save bar height */
-  }
-
-  .leftControlsPlaceholder {
-    display: none;
+    gap: 0.35rem;
   }
 
   /* Tiny PiP on phones */
