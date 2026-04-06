@@ -19,10 +19,10 @@ import {
 } from '@livekit/components-react';
 import { Track } from 'livekit-client';
 import { useScreenShare } from './useScreenShare';
-import { ConnectionQuality } from './ConnectionQuality';
 import styles from '../styles/WatchParty.module.css';
 import { format } from 'date-fns';
 import EmojiPicker, { EmojiClickData, Theme } from 'emoji-picker-react';
+import toast from 'react-hot-toast';
 
 const USER_COLORS = [
   '#f87171', // red-400
@@ -150,6 +150,59 @@ function CallDuration({ startTime }: { startTime: number }) {
   );
 }
 
+async function copyTextToClipboard(value: string) {
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(value);
+    return;
+  }
+
+  const textArea = document.createElement('textarea');
+  textArea.value = value;
+  textArea.setAttribute('readonly', 'true');
+  textArea.style.position = 'absolute';
+  textArea.style.left = '-9999px';
+
+  document.body.appendChild(textArea);
+  textArea.select();
+  const copied = document.execCommand('copy');
+  document.body.removeChild(textArea);
+
+  if (!copied) {
+    throw new Error('Failed to copy room link');
+  }
+}
+
+function RoomActions({ participantLabel }: { participantLabel: string }) {
+  const handleShareLink = async () => {
+    try {
+      await copyTextToClipboard(window.location.href);
+      toast.success('Room link copied', {
+        duration: 2000,
+        position: 'top-center',
+      });
+    } catch (error) {
+      toast.error('Unable to copy room link', {
+        duration: 2500,
+        position: 'top-center',
+      });
+      console.error(error);
+    }
+  };
+
+  return (
+    <div className={styles.roomActions}>
+      <div className={styles.participantCount}>{participantLabel}</div>
+      <button
+        type="button"
+        className={styles.shareLinkButton}
+        onClick={handleShareLink}
+      >
+        Share link
+      </button>
+    </div>
+  );
+}
+
 interface ChatMessagePayload {
   text: string;
   replyTo?: {
@@ -246,7 +299,6 @@ function WatchPartyLayoutInner() {
   const {
     isScreenShareActive,
     screenShareParticipant,
-    hasScreenShareAudio,
     participantCount,
   } = useScreenShare();
 
@@ -448,11 +500,7 @@ function WatchPartyLayoutInner() {
                 {screenShareParticipant?.name || screenShareParticipant?.identity} is sharing
               </div> */}
 
-
-              {/* Participant count and connection quality */}
-              <div className={styles.participantCount}>
-                {participantCount} watching
-              </div>
+              <RoomActions participantLabel={`${participantCount} watching`} />
 
               {/* Main screen share view */}
               <div className={styles.screenShareView}>
@@ -652,10 +700,7 @@ function WatchPartyLayoutInner() {
               </div>
             )}
 
-            {/* Participant count */}
-            <div className={styles.participantCount}>
-              {participantCount} in room
-            </div>
+            <RoomActions participantLabel={`${participantCount} in room`} />
 
             {/* Grid layout for participants or 1v1 PiP Layout */}
             {filteredParticipantTracks.length > 0 && (

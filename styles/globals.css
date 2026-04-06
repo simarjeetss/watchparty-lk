@@ -57,13 +57,15 @@
 
 /* ── Dark (default) ── */
 :root {
-  --bg:    #0a0a0a;
-  --bg-1:  #111111;
-  --fg:    #f0ede8;
-  --fg-2:  #8a8585;
-  --fg-3:  #4a4747;
-  --rule:  #1f1f1f;
+  --bg:    #141210;
+  --bg-1:  #1c1917;
+  --fg:    #f3eee8;
+  --fg-2:  #c1b8b0;
+  --fg-3:  #938982;
+  --rule:  #302b28;
   --accent: #e05c4a;
+  --selection-bg: rgba(224, 92, 74, 0.45);
+  --selection-fg: #f3eee8;
   --font-mono:  'DM Mono', monospace;
   --font-serif: 'Instrument Serif', serif;
 }
@@ -77,6 +79,18 @@
   --fg-3:  #a09a94;
   --rule:  #ddd8d2;
   --accent: #d9521e;
+  --selection-bg: rgba(217, 82, 30, 0.25);
+  --selection-fg: #000000;
+}
+
+::selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
+}
+
+::-moz-selection {
+  background: var(--selection-bg);
+  color: var(--selection-fg);
 }
 
 html {
