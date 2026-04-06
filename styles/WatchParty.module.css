@@ -7,6 +7,7 @@
   display: flex;
   flex-direction: column;
   height: 100vh;
+  height: 100dvh; /* dynamic viewport — accounts for Safari iOS browser chrome */
   width: 100vw;
   background-color: var(--bg);
   position: relative;
@@ -582,6 +583,7 @@
   padding: 0 1rem;
   background: var(--bg);
   min-height: 64px;
+  flex-shrink: 0; /* never let the control bar get squeezed out */
 }
 
 .leftControlsPlaceholder {
@@ -767,20 +769,15 @@
     padding: 0.25rem 0.5rem;
   }
 
-  /* Bottom bar: wrap timer below */
+  /* Bottom bar: single row, compact */
   .bottomBarContainer {
-    flex-wrap: wrap;
-    padding: 0.5rem;
-    min-height: unset;
-    gap: 0.25rem;
+    padding: 0 0.25rem;
+    min-height: 52px;
+    flex-shrink: 0;
   }
 
   .callTimer {
-    flex: 0 0 100%;
-    justify-content: center;
-    padding-right: 0;
-    font-size: 0.7rem;
-    padding-bottom: 0.25rem;
+    display: none; /* hide timer on mobile to save bar height */
   }
 
   .leftControlsPlaceholder {
