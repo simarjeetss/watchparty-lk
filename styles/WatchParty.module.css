@@ -545,25 +545,26 @@
 
 /* ─── Chat toggle ─── */
 .chatToggleButton {
-  position: absolute;
-  bottom: 5rem;
-  right: 1rem;
-  z-index: 15;
-  background: var(--bg-1);
-  border: 1px solid var(--rule);
+  flex: 1;
+  background: none;
+  border: none;
+  border-right: 1px solid var(--rule);
   color: var(--fg-3);
-  padding: 0.6rem 0.9rem;
+  padding: 0 1rem;
   cursor: pointer;
   font-family: var(--font-mono);
   font-size: 0.7rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
-  transition: border-color 0.15s, color 0.15s;
+  text-align: left;
+  height: 100%;
+  transition: color 0.15s, background 0.15s;
+  white-space: nowrap;
 }
 
 .chatToggleButton:hover {
-  border-color: var(--fg-3);
   color: var(--fg);
+  background: var(--bg-1);
 }
 
 .chatToggleButton::before {
@@ -667,23 +668,149 @@
   border-radius: 2px !important;
 }
 
-/* ─── Responsive ─── */
+/* ════════════════════════════════════════
+   RESPONSIVE — tablet & mobile
+   ════════════════════════════════════════ */
+
+/* ─── Tablet (≤ 768px) ─── */
 @media (max-width: 768px) {
-  .chatPanel {
-    width: 260px;
+  /* Stack content + chat vertically */
+  .contentArea {
+    flex-direction: column;
   }
+
+  /* Chat slides to bottom as a drawer */
+  .chatPanel {
+    width: 100%;
+    height: 45vh;
+    min-height: 260px;
+    border-left: none;
+    border-top: 1px solid var(--rule);
+    flex-shrink: 0;
+  }
+
+  /* Smaller PiP */
   .pipContainer {
-    width: 200px;
-    height: 112px;
+    width: 160px;
+    height: 90px;
+  }
+
+  /* Thumbnails */
+  .participantThumbnails {
+    right: 0.5rem;
+    bottom: 0.5rem;
+  }
+
+  .thumbnailItem {
+    width: 140px;
+    height: 79px;
+  }
+
+  .toggleThumbnails {
+    right: calc(140px + 1rem);
+    bottom: 0.5rem;
+  }
+
+  /* Bottom bar compact */
+  .bottomBarContainer {
+    padding: 0 0.5rem;
+    min-height: 56px;
+  }
+
+  /* Collapse gallery columns */
+  .galleryGrid[data-count="5"],
+  .galleryGrid[data-count="6"] {
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(3, 1fr);
   }
 }
 
+/* ─── Mobile (≤ 480px) ─── */
 @media (max-width: 480px) {
+  /* Stack vertically — chat is a bottom half drawer in normal flow */
+  .contentArea {
+    flex-direction: column;
+  }
+
+  /* Video takes top half */
+  .mainContent {
+    flex: 1 1 50%;
+    min-height: 0;
+  }
+
+  /* Chat takes bottom half, in-flow (no overlay) */
   .chatPanel {
-    position: absolute;
-    inset: 0;
+    position: static;
     width: 100%;
-    z-index: 20;
+    height: 50%;
+    flex: 0 0 50%;
+    min-height: unset;
+    border-top: 1px solid var(--rule);
     border-left: none;
+    z-index: auto;
+  }
+
+  /* Hide thumbnails on mobile */
+  .participantThumbnails,
+  .toggleThumbnails {
+    display: none;
+  }
+
+  /* Hide audio indicator to save space */
+  .audioIndicator {
+    display: none;
+  }
+
+  /* Tighter screen-share indicator */
+  .screenShareIndicator {
+    font-size: 0.62rem;
+    padding: 0.25rem 0.5rem;
+  }
+
+  /* Bottom bar: wrap timer below */
+  .bottomBarContainer {
+    flex-wrap: wrap;
+    padding: 0.5rem;
+    min-height: unset;
+    gap: 0.25rem;
+  }
+
+  .callTimer {
+    flex: 0 0 100%;
+    justify-content: center;
+    padding-right: 0;
+    font-size: 0.7rem;
+    padding-bottom: 0.25rem;
+  }
+
+  .leftControlsPlaceholder {
+    display: none;
+  }
+
+  /* Tiny PiP on phones */
+  .pipContainer {
+    width: 110px;
+    height: 62px;
+  }
+
+  /* Single column gallery on small phones */
+  .galleryGrid[data-count="2"],
+  .galleryGrid[data-count="3"],
+  .galleryGrid[data-count="4"],
+  .galleryGrid[data-count="5"],
+  .galleryGrid[data-count="6"] {
+    grid-template-columns: 1fr;
+    grid-template-rows: unset;
+  }
+
+  /* Less padding for waiting state */
+  .waitingState {
+    padding: 1rem;
+  }
+
+  /* Chat toggle: tighter font on small phones */
+  .chatToggleButton {
+    font-size: 0.65rem;
+    padding: 0 0.75rem;
   }
 }

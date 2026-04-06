@@ -253,8 +253,29 @@ function WatchPartyLayoutInner() {
   const startTime = React.useMemo(() => Date.now(), []);
 
   const [thumbnailsCollapsed, setThumbnailsCollapsed] = useState(false);
-  const [chatVisible, setChatVisible] = useState(true);
+  const [chatVisible, setChatVisible] = useState(() => {
+    // Default chat to closed on mobile to maximise video area
+    if (typeof window !== 'undefined') {
+      return window.innerWidth > 768;
+    }
+    return true;
+  });
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
+
+  // Close chat on resize to mobile, open on resize to desktop
+  useEffect(() => {
+    const handleResize = () => {
+      const isDesktop = window.innerWidth > 768;
+      setChatVisible((prev) => {
+        // Only auto-change if transitioning across the breakpoint
+        if (!isDesktop && prev === true && window.innerWidth <= 768) return false;
+        if (isDesktop && prev === false && window.innerWidth > 768) return true;
+        return prev;
+      });
+    };
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Track page theme for emoji picker
   const [isLightTheme, setIsLightTheme] = useState(false);
@@ -430,10 +451,7 @@ function WatchPartyLayoutInner() {
 
               {/* Participant count and connection quality */}
               <div className={styles.participantCount}>
-                    {participantCount} watching
-                <span style={{ marginLeft: '12px' }}>
-                  <ConnectionQuality showLabel={false} />
-                </span>
+                {participantCount} watching
               </div>
 
               {/* Main screen share view */}
@@ -590,7 +608,14 @@ function WatchPartyLayoutInner() {
 
           {/* Control bar */}
           <div className={styles.bottomBarContainer}>
-            <div className={styles.leftControlsPlaceholder} />
+            {!chatVisible ? (
+              <button
+                className={styles.chatToggleButton}
+                onClick={() => setChatVisible(true)}
+              />
+            ) : (
+              <div className={styles.leftControlsPlaceholder} />
+            )}
             <ControlBar
               controls={{
                 camera: true,
@@ -602,15 +627,6 @@ function WatchPartyLayoutInner() {
             />
             <CallDuration startTime={startTime} />
           </div>
-          
-          {/* Custom chat toggle button */}
-          {!chatVisible && (
-            <button 
-              className={styles.chatToggleButton}
-              onClick={() => setChatVisible(true)}
-            >
-            </button>
-          )}
         </div>
       </div>
     );
@@ -636,12 +652,9 @@ function WatchPartyLayoutInner() {
               </div>
             )}
 
-            {/* Participant count and connection quality */}
+            {/* Participant count */}
             <div className={styles.participantCount}>
               {participantCount} in room
-              <span style={{ marginLeft: '12px' }}>
-                <ConnectionQuality showLabel={false} />
-              </span>
             </div>
 
             {/* Grid layout for participants or 1v1 PiP Layout */}
@@ -817,7 +830,14 @@ function WatchPartyLayoutInner() {
 
         {/* Control bar */}
         <div className={styles.bottomBarContainer}>
-          <div className={styles.leftControlsPlaceholder} />
+          {!chatVisible ? (
+            <button
+              className={styles.chatToggleButton}
+              onClick={() => setChatVisible(true)}
+            />
+          ) : (
+            <div className={styles.leftControlsPlaceholder} />
+          )}
           <ControlBar
             controls={{
               camera: true,
@@ -829,16 +849,6 @@ function WatchPartyLayoutInner() {
           />
           <CallDuration startTime={startTime} />
         </div>
-        
-        {/* Custom chat toggle button */}
-        {!chatVisible && (
-          <button 
-            className={styles.chatToggleButton}
-            onClick={() => setChatVisible(true)}
-          >
-            💬
-          </button>
-        )}
       </div>
     </div>
   );

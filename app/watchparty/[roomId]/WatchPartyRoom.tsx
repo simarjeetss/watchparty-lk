@@ -80,10 +80,11 @@ export function WatchPartyRoom(props: {
           flexDirection: 'column',
           alignItems: 'center',
           justifyContent: 'center',
-          height: '100%',
-          padding: '4rem 5vw',
+          minHeight: '100%',
+          padding: 'clamp(4rem, 8vw, 6rem) clamp(1rem, 5vw, 2rem) clamp(2rem, 4vw, 4rem)',
           position: 'relative',
           gap: '2.5rem',
+          overflowY: 'auto',
         }}>
           {/* Room label */}
           <span style={{
